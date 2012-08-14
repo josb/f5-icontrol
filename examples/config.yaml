@@ -1,0 +1,8 @@
+username: guest
+password: 'pass'
+wsdl:
+  LocalLB:
+    pool: LocalLB.Pool.wsdl
+    pool_member: LocalLB.PoolMember.wsdl
+    virtual_server: LocalLB.VirtualServer.wsdl
+    node_address: LocalLB.NodeAddress.wsdl

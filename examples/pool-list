@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+# vim:expandtab shiftwidth=2 softtabstop=2
+
+require 'rubygems'
+require 'getoptions'
+
+require 'f5-icontrol/f5'
+
+PROGNAME = File.basename($0)
+
+def usage
+  Kernel.abort "Usage: #{PROGNAME} [--config_file <filename>] <hostname> ..."
+end
+
+opts = GetOptions.new(%w(config_file=s connect_timeout=i))
+
+usage if ARGV.empty?
+
+hostnames = ARGV
+
+options = {
+  :config_file     => opts.config_file,
+  :connect_timeout => opts.connect_timeout,
+}
+
+hostnames.each do |hostname|
+  lb = F5::LoadBalancer.new(hostname, options)
+  begin
+    puts lb.pools
+  rescue HTTPClient::ConnectTimeoutError => exc
+    abort "#{PROGNAME}: connect to #{hostname}: #{exc.message}"
+  end
+end
+
+exit 0

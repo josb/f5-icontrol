@@ -1,0 +1,27 @@
+Note that the example programs require the getoptions gem
+(http://rubyforge.org/projects/getoptions/).
+
+Before trying to run the examples, please make sure that:
+- config.yaml has valid setup information; use the --config_file option when
+  invoking the scripts to point to it.
+- the code can find the .wsdl files identified in config.yaml.
+
+If when running the examples under ruby-1.9.2 you see the message
+  
+  RuntimeError: XML processor module not found.
+
+you may want to edit lib/xsd/xmlparser.rb, line 66.
+
+Change
+
+  c.downcase == name
+
+to
+
+  c.to_s.downcase == name
+
+(Fix found at http://railsforum.com/viewtopic.php?id=41231)
+
+Also note that soap4r seems to have other issues when used with 1.9. The
+following fork (not packaged as a gem, it seems) may or may not work:
+https://github.com/spox/soap4r-spoxhttps://github.com/spox/soap4r-spox

@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+# vim:expandtab shiftwidth=2 softtabstop=2
+
+PROGNAME = File.basename($0)
+
+require 'rubygems'
+require 'getoptions'
+require 'yaml'
+
+require 'f5-icontrol/f5'
+
+def usage
+  Kernel.abort "Usage: #{PROGNAME} [--config_file <filename>] <hostname> [poolname ...]"
+end
+
+opts = GetOptions.new(%w(config_file=s connect_timeout=i))
+
+usage if ARGV.empty?
+
+hostname, *pools = ARGV
+
+options = {
+  :config_file     => opts.config_file,
+  :connect_timeout => opts.connect_timeout,
+}
+
+lb = F5::LoadBalancer.new(hostname, options)
+
+begin
+  pools = pools.empty? ? lb.pools : pools.map {|pool| F5::LoadBalancer::Pool.new(lb, pool)}
+
+  h = {}
+  pools.each do |pool|
+    members = pool.members
+    unless members.empty?
+      h[pool.name] = members.map {|member|
+        member.refresh
+        {
+          'address' => member.address,
+          'port' => member.port,
+          'state' => {
+            'session_enabled_state' => member.session_enabled_state,
+            'session_status' => member.session_status,
+            'monitor_status' => member.monitor_status,
+          }
+        }
+      }
+    end
+  end
+rescue HTTPClient::ConnectTimeoutError => exc
+  abort "#{PROGNAME}: connect to #{hostname}: #{exc.message}"
+end
+
+puts h.to_yaml
+
+exit 0
